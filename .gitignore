@@ -52,7 +52,7 @@ tweet_generator.log
 *.temp
 
 # Cache database - each user should have their own
-cache.db
+# cache.db  # COMMENTED OUT FOR PRIVATE REPO - allows GitHub Actions to commit cache
 
 # PRIVATE REPO SETUP:
 # If you're running this in a private fork for production,
