@@ -1,0 +1,88 @@
+name: Tweet My Blog
+
+on:
+  schedule:
+    # Run daily at 9 AM UTC (adjust timezone as needed)
+    - cron: '0 9 * * *'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Run in test mode (no actual tweets)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  tweet:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        # Need to fetch the cache.db if it exists
+        fetch-depth: 1
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run tweet bot
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+        TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+        TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+        TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+        SITEMAP_URL: ${{ vars.SITEMAP_URL || 'https://pikeandvine.com/post-sitemap.xml' }}
+        BLOG_TITLE: ${{ vars.BLOG_TITLE || 'Pike & Vine' }}
+        BLOG_DESCRIPTION: ${{ vars.BLOG_DESCRIPTION || 'SaaS Marketing & Growth' }}
+        COOLDOWN_DAYS: ${{ vars.COOLDOWN_DAYS || '30' }}
+        MAX_PREVIOUS_TWEETS: ${{ vars.MAX_PREVIOUS_TWEETS || '3' }}
+        OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
+      run: |
+        if [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
+          python run.py --test
+        else
+          python run.py
+        fi
+    
+    - name: Commit updated cache
+      if: success()
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action Bot"
+        
+        # Add cache.db if it was modified
+        if [ -f cache.db ]; then
+          git add cache.db
+          
+          # Only commit if there are changes
+          if ! git diff --staged --quiet; then
+            git commit -m "Update tweet cache [automated]"
+            git push
+          else
+            echo "No cache changes to commit"
+          fi
+        fi
+    
+    # Upload logs as artifacts for debugging
+    - name: Upload logs
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: tweet-logs
+        path: |
+          tweet_generator.log
+        retention-days: 30 
