@@ -20,6 +20,8 @@ on:
 jobs:
   tweet:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Allow pushing cache updates back to repo
     
     steps:
     - name: Checkout repository
