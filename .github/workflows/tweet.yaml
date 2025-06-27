@@ -45,6 +45,7 @@ jobs:
         TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
         TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
         TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+        TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
         SITEMAP_URL: ${{ vars.SITEMAP_URL || 'https://pikeandvine.com/post-sitemap.xml' }}
         BLOG_TITLE: ${{ vars.BLOG_TITLE || 'Pike & Vine' }}
         BLOG_DESCRIPTION: ${{ vars.BLOG_DESCRIPTION || 'SaaS Marketing & Growth' }}
@@ -64,7 +65,7 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action Bot"
         
-        # Add cache.db if it was modified
+        # Add cache.db if it exists and was modified
         if [ -f cache.db ]; then
           git add cache.db
           
@@ -75,7 +76,12 @@ jobs:
           else
             echo "No cache changes to commit"
           fi
+        else
+          echo "No cache.db file found - this is normal for test mode"
         fi
+        
+        # Always succeed this step
+        exit 0
     
     # Upload logs as artifacts for debugging
     - name: Upload logs
