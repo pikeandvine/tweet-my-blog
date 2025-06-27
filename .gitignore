@@ -54,6 +54,11 @@ tweet_generator.log
 # Cache database - each user should have their own
 cache.db
 
+# PRIVATE REPO SETUP:
+# If you're running this in a private fork for production,
+# comment out the cache.db line above to enable persistence:
+# This allows GitHub Actions to commit cache updates automatically
+
 # Development artifacts - not needed in main repo
 docs/
 reference_scripts/
