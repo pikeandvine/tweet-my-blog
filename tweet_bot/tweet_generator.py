@@ -182,7 +182,11 @@ class TweetGenerator:
             "- Engaging and clickable",
             "- DO NOT refer to the post as 'latest', 'new', or 'just published' unless it's from the last 7 days",
             "- Focus on the content value rather than recency",
-            f"- Blog context: {self.config.blog_title} - {self.config.blog_description}"
+            f"- Blog context: {self.config.blog_title} - {self.config.blog_description}",
+            "",
+            "GRAMMAR RULES:",
+            "- NO Oxford commas (do not use comma before 'and' in lists)",
+            "- NO em dashes (—) - use regular hyphens (-) or avoid dashes entirely"
         ])
         
         return "\n".join(prompt_parts)
