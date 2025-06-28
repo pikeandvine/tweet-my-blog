@@ -19,8 +19,9 @@ Automatically promote your WordPress blog posts on Twitter using AI-generated tw
 You'll need:
 - **OpenAI API Key**: Get from [OpenAI Platform](https://platform.openai.com/api-keys)
 - **Twitter API Keys**: Get from [Twitter Developer Portal](https://developer.twitter.com/en/portal/dashboard)
-  - API Key & Secret
+  - API Key & Secret (Consumer Keys)
   - Access Token & Secret (with Read and Write permissions)
+  - Bearer Token
 
 ### 2. Configure GitHub Repository
 
@@ -32,6 +33,7 @@ You'll need:
    TWITTER_API_SECRET=your_twitter_api_secret
    TWITTER_ACCESS_TOKEN=your_twitter_access_token
    TWITTER_ACCESS_TOKEN_SECRET=your_twitter_access_token_secret
+   TWITTER_BEARER_TOKEN=your_twitter_bearer_token
    ```
 
 3. **Add GitHub Variables** (Settings → Secrets and variables → Actions → Variables):
@@ -102,7 +104,7 @@ The bot automatically randomizes these style parameters:
 ## 📅 Scheduling
 
 The GitHub Actions workflow runs:
-- **Daily at 9 AM UTC** (customize in `.github/workflows/tweet.yaml`)
+- **Daily at 7 PM UTC / 12 PM PDT** (customize in `.github/workflows/tweet.yaml`)
 - **Manual trigger** via GitHub Actions UI (with optional test mode)
 
 ## 🛠️ Commands
