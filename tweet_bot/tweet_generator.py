@@ -10,6 +10,7 @@ from openai import OpenAI
 import tweepy
 from bs4 import BeautifulSoup
 import re
+from io import BytesIO
 
 logger = logging.getLogger(__name__)
 
@@ -286,6 +287,8 @@ class TweetGenerator:
             # Handle image if provided
             if image_url:
                 media_ids = self._upload_image(image_url)
+                if not media_ids:
+                    logger.warning(f"Failed to upload image {image_url}, posting tweet without image")
             
             # Post the tweet
             if media_ids:
@@ -311,8 +314,12 @@ class TweetGenerator:
             response = requests.get(image_url, timeout=30)
             response.raise_for_status()
             
+            # Create a BytesIO object from the response content
+            # This gives us a file-like object that tweepy expects
+            image_file = BytesIO(response.content)
+            
             # Upload to Twitter using v1.1 API (v2 doesn't support media upload yet)
-            media = self.twitter_api.media_upload(filename="temp_image.jpg", file=response.content)
+            media = self.twitter_api.media_upload(filename="temp_image.jpg", file=image_file)
             return [media.media_id]
             
         except Exception as e:
