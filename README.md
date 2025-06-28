@@ -52,7 +52,10 @@ You'll need:
 Get instant notifications when tweets are posted:
 
 1. **Choose a topic name** (e.g., `my-blog-tweets`) - this can be anything unique
-2. **Add to GitHub Variables**: `NTFY_TOPIC=your_topic_name`
+2. **Add to GitHub Variables** (NOT Secrets): `NTFY_TOPIC=your_topic_name`
+   - Go to **Settings** → **Secrets and variables** → **Actions** → **Variables** tab
+   - Click "New repository variable"
+   - **Important**: Use Variables, not Secrets (NTFY topics aren't sensitive)
 3. **Subscribe on your devices**:
    - **Mobile**: Download [ntfy app](https://ntfy.sh/app) and subscribe to your topic
    - **Desktop**: Visit `https://ntfy.sh/your_topic_name` in your browser
@@ -69,7 +72,30 @@ You'll receive notifications with:
 python test_notifications.py your_topic_name
 ```
 
-### 5. Test Locally (Optional)
+### 5. Production Deployment (Private Repo)
+
+If you're running this in a **private repository** for production use:
+
+1. **Enable cache persistence** by editing `.gitignore`:
+   ```bash
+   # Comment out this line in .gitignore:
+   # cache.db
+   ```
+   This allows GitHub Actions to commit tweet history between runs.
+
+2. **Ensure GitHub Actions has write permissions**:
+   - Repository **Settings** → **Actions** → **General**
+   - **Workflow permissions** → **Read and write permissions**
+
+3. **Set up dual remotes** (optional) for development workflow:
+   ```bash
+   git remote add upstream https://github.com/original/tweet-my-blog.git
+   git remote set-url origin https://github.com/yourusername/tweet-my-blog-prod.git
+   ```
+
+**Note**: Keep `cache.db` ignored for public repos and local development.
+
+### 6. Test Locally (Optional)
 
 ```bash
 # Clone the repository
@@ -262,6 +288,27 @@ Set via `OPENAI_MODEL` environment variable.
 3. **OpenAI API errors**: Check your API key and usage limits
 4. **Cache not persisting**: Ensure the GitHub Actions workflow has write permissions
 5. **Scheduling issues**: See troubleshooting section below
+
+### Notification Issues
+
+**"ntfy.sh notifications disabled (no NTFY_TOPIC set)":**
+- ✅ **Solution**: Check that `NTFY_TOPIC` is set as a **Variable** (not Secret)
+- **Common mistake**: Setting it as a Secret instead of Variable
+- **Check**: Settings → Secrets and variables → Actions → Variables tab
+
+**"Failed to send ntfy.sh notification: 'latin-1' codec can't encode character":**
+- ✅ **Fixed in recent versions** - emojis now handled properly
+- **If still occurring**: Update to latest version of the codebase
+
+### Tweet Quality Issues
+
+**Tweets ending with incomplete sentences** (e.g., "Scale smarter not"):
+- ✅ **Fixed in recent versions** - AI validation now catches incomplete sentences
+- **Manual fix**: Check generated tweets before posting in test mode
+
+**"'bytes' object has no attribute 'tell'" error with images:**
+- ✅ **Fixed in recent versions** - image upload now uses proper BytesIO handling
+- **If still occurring**: Update to latest version of the codebase
 
 ### Scheduling Troubleshooting
 
