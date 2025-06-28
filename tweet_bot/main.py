@@ -13,6 +13,7 @@ from .sitemap_parser import SitemapParser
 from .tweet_generator import TweetGenerator
 from .daily_scheduler import DailyScheduler
 from .random_delay import apply_random_delay
+from .notifier import Notifier
 
 # Configure logging
 logging.basicConfig(
@@ -43,10 +44,17 @@ class TweetBot:
         self.cache = CacheManager(self.config.cache_db_path)
         self.sitemap_parser = SitemapParser(self.config.sitemap_url)
         self.tweet_generator = TweetGenerator(self.config, test_mode)
+        self.notifier = Notifier(self.config.ntfy_topic)
         
         logger.info("TweetBot initialized successfully")
         if test_mode:
             logger.info("Running in TEST MODE - no tweets will be posted")
+        
+        # Log notification status
+        if self.config.ntfy_topic:
+            logger.info(f"✅ ntfy.sh notifications enabled for topic: {self.config.ntfy_topic}")
+        else:
+            logger.info("ℹ️ ntfy.sh notifications disabled (no NTFY_TOPIC set)")
     
     def run(self) -> bool:
         """Run the main tweet generation workflow"""
@@ -146,14 +154,32 @@ class TweetBot:
                     print(f"🐦 Tweet posted: https://twitter.com/user/status/{tweet_id}")
                 print(f"📄 Post: {post_data['url']}")
                 print(f"📝 Tweet: {tweet_text}")
+                
+                # Send notification if configured
+                self.notifier.send_tweet_notification(
+                    tweet_text=tweet_text,
+                    post_url=post_data['url'],
+                    tweet_id=tweet_id
+                )
             else:
                 logger.error("❌ Failed to post tweet")
+                
+                # Send error notification if configured
+                self.notifier.send_error_notification(
+                    error_message="Failed to post tweet",
+                    post_url=post_data['url']
+                )
                 return False
             
             return True
             
         except Exception as e:
             logger.error(f"Error in tweet generation workflow: {e}", exc_info=True)
+            
+            # Send error notification for unexpected failures
+            self.notifier.send_error_notification(
+                error_message=f"Unexpected error in tweet workflow: {str(e)}"
+            )
             return False
     
     def get_stats(self) -> dict:

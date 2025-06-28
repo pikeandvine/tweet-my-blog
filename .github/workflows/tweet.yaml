@@ -73,6 +73,7 @@ jobs:
         MAX_PREVIOUS_TWEETS: ${{ vars.MAX_PREVIOUS_TWEETS || '3' }}
         OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
         ENABLE_DELAY: ${{ vars.ENABLE_DELAY || 'true' }}
+        NTFY_TOPIC: ${{ vars.NTFY_TOPIC }}
       run: |
         # Build command with optional flags
         cmd="python run.py"

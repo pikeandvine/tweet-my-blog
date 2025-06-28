@@ -10,6 +10,7 @@ Automatically promote your WordPress blog posts on Twitter using AI-generated tw
 - **Smart Caching**: SQLite-based system prevents re-tweeting too frequently and avoids redundant content
 - **Style Variations**: Randomizes emoji usage, tone, CTA style, and length for natural variety
 - **Featured Image Support**: Automatically includes featured images from your WordPress posts
+- **Push Notifications**: Optional [ntfy.sh](https://ntfy.sh) notifications when tweets are posted or fail
 - **Nearly Zero Cost**: Runs on GitHub Actions free tier with minimal API usage (~$0.01/month)
 - **Highly Configurable**: Customizable schedules, cooldowns, style parameters, and timing behavior
 
@@ -43,9 +44,32 @@ You'll need:
    BLOG_TITLE=Your Blog Name
    BLOG_DESCRIPTION=Brief description for context
    ENABLE_DELAY=true
+   NTFY_TOPIC=your_notification_topic  # Optional: for push notifications
    ```
 
-### 3. Test Locally (Optional)
+### 4. Set Up Push Notifications (Optional)
+
+Get instant notifications when tweets are posted:
+
+1. **Choose a topic name** (e.g., `my-blog-tweets`) - this can be anything unique
+2. **Add to GitHub Variables**: `NTFY_TOPIC=your_topic_name`
+3. **Subscribe on your devices**:
+   - **Mobile**: Download [ntfy app](https://ntfy.sh/app) and subscribe to your topic
+   - **Desktop**: Visit `https://ntfy.sh/your_topic_name` in your browser
+   - **Command line**: `curl -s ntfy.sh/your_topic_name/raw`
+
+You'll receive notifications with:
+- ✅ **Success**: Tweet text, post URL, and Twitter link
+- ❌ **Failures**: Error details for troubleshooting
+
+**Note**: Anyone who knows your topic name can send notifications to it. Choose something unique and don't share it publicly.
+
+**Test your setup** by running the included test script:
+```bash
+python test_notifications.py your_topic_name
+```
+
+### 5. Test Locally (Optional)
 
 ```bash
 # Clone the repository
@@ -81,6 +105,7 @@ python run.py --stats
 | `MAX_PREVIOUS_TWEETS` | `3` | Number of previous tweets to avoid duplicating |
 | `OPENAI_MODEL` | `gpt-4.1-mini` | OpenAI model to use for tweet generation |
 | `ENABLE_DELAY` | `true` | Enable 0-180 second random delay for human-like timing |
+| `NTFY_TOPIC` | *optional* | [ntfy.sh](https://ntfy.sh) topic for push notifications when tweets are posted |
 
 ## 🎨 Style Variations
 

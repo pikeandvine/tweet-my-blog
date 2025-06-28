@@ -33,6 +33,9 @@ class Config:
         # Database
         self.cache_db_path = os.getenv('CACHE_DB_PATH', 'cache.db')
         
+        # Notifications
+        self.ntfy_topic = os.getenv('NTFY_TOPIC')  # Optional - no notification if not set
+        
         # AI Model configuration
         # Options: gpt-4.1-mini (recommended), gpt-4.1-nano (ultra-cheap), gpt-4o-mini (older)
         self.openai_model = os.getenv('OPENAI_MODEL', 'gpt-4.1-mini')
