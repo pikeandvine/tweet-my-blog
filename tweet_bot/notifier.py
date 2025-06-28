@@ -22,9 +22,11 @@ class Notifier:
             
         try:
             # Construct the notification message
-            title = "🐦 Tweet Posted!"
+            title = "Tweet Posted!"
             
             message_parts = [
+                f"🐦 Tweet Posted!",
+                "",
                 f"📝 {tweet_text}",
                 "",
                 f"📄 Post: {post_url}"
@@ -61,9 +63,11 @@ class Notifier:
             return True
             
         try:
-            title = "⚠️ Tweet Generation Failed"
+            title = "Tweet Generation Failed"
             
             message_parts = [
+                f"⚠️ Tweet Generation Failed",
+                "",
                 f"❌ {error_message}"
             ]
             
