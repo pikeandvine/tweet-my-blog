@@ -26,6 +26,14 @@ on:
         options:
           - 'true'
           - 'false'
+      force_run:
+        description: 'Force execution (bypass scheduling check)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 jobs:
   tweet:
@@ -66,11 +74,17 @@ jobs:
         OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
         ENABLE_DELAY: ${{ vars.ENABLE_DELAY || 'true' }}
       run: |
+        # Build command with optional flags
+        cmd="python run.py"
         if [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
-          python run.py --test
-        else
-          python run.py
+          cmd="$cmd --test"
         fi
+        if [ "${{ github.event.inputs.force_run }}" = "true" ]; then
+          cmd="$cmd --force"
+        fi
+        
+        echo "Running: $cmd"
+        $cmd
     
     - name: Commit updated cache and schedule
       if: success()
