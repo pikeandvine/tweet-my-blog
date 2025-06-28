@@ -66,4 +66,5 @@ reference_scripts/
 # Test artifacts
 .pytest_cache/
 .coverage
-htmlcov/ 
+htmlcov/
+test_schedule.json 

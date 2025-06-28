@@ -2,8 +2,18 @@ name: Tweet My Blog
 
 on:
   schedule:
-    # Run daily at 12 PM PDT / 7 PM UTC (optimal engagement time)
-    - cron: '0 19 * * *'
+    # Multiple time slots for human-like scheduling (6am-4pm PDT / 13-23 UTC)
+    - cron: "12 13 * * *"  # 6:12am PDT (13 UTC)
+    - cron: "23 14 * * *"  # 7:23am PDT (14 UTC)
+    - cron: "08 15 * * *"  # 8:08am PDT (15 UTC)
+    - cron: "37 16 * * *"  # 9:37am PDT (16 UTC)
+    - cron: "19 17 * * *"  # 10:19am PDT (17 UTC)
+    - cron: "26 18 * * *"  # 11:26am PDT (18 UTC)
+    - cron: "43 19 * * *"  # 12:43pm PDT (19 UTC)
+    - cron: "17 20 * * *"  # 1:17pm PDT (20 UTC)
+    - cron: "33 21 * * *"  # 2:33pm PDT (21 UTC)
+    - cron: "11 22 * * *"  # 3:11pm PDT (22 UTC)
+    - cron: "29 23 * * *"  # 4:29pm PDT (23 UTC)
   
   # Allow manual triggering
   workflow_dispatch:
@@ -54,6 +64,7 @@ jobs:
         COOLDOWN_DAYS: ${{ vars.COOLDOWN_DAYS || '30' }}
         MAX_PREVIOUS_TWEETS: ${{ vars.MAX_PREVIOUS_TWEETS || '3' }}
         OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
+        ENABLE_DELAY: ${{ vars.ENABLE_DELAY || 'true' }}
       run: |
         if [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
           python run.py --test
@@ -61,25 +72,30 @@ jobs:
           python run.py
         fi
     
-    - name: Commit updated cache
+    - name: Commit updated cache and schedule
       if: success()
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action Bot"
         
-        # Add cache.db if it exists and was modified
+        # Add cache.db and daily_schedule.json if they exist and were modified
+        files_to_add=""
         if [ -f cache.db ]; then
           git add cache.db
-          
-          # Only commit if there are changes
-          if ! git diff --staged --quiet; then
-            git commit -m "Update tweet cache [automated]"
-            git push
-          else
-            echo "No cache changes to commit"
-          fi
+          files_to_add="cache.db"
+        fi
+        if [ -f daily_schedule.json ]; then
+          git add daily_schedule.json
+          files_to_add="$files_to_add daily_schedule.json"
+        fi
+        
+        # Only commit if there are changes
+        if ! git diff --staged --quiet; then
+          git commit -m "Update tweet cache and schedule [automated]"
+          git push
+          echo "Committed changes to: $files_to_add"
         else
-          echo "No cache.db file found - this is normal for test mode"
+          echo "No changes to commit"
         fi
         
         # Always succeed this step

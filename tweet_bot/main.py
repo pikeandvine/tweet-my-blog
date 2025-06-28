@@ -11,6 +11,8 @@ from .config import Config
 from .cache_manager import CacheManager
 from .sitemap_parser import SitemapParser
 from .tweet_generator import TweetGenerator
+from .daily_scheduler import DailyScheduler
+from .random_delay import apply_random_delay
 
 # Configure logging
 logging.basicConfig(
@@ -170,8 +172,27 @@ def main():
     parser.add_argument('--test', action='store_true', help='Run in test mode (no actual tweets)')
     parser.add_argument('--stats', action='store_true', help='Show statistics and exit')
     parser.add_argument('--cleanup', type=int, metavar='DAYS', help='Clean up tweet history older than DAYS')
+    parser.add_argument('--force', action='store_true', help='Force execution regardless of schedule')
     
     args = parser.parse_args()
+    
+    # Quick schedule check for automated runs (skip for manual operations)
+    if not any([args.stats, args.cleanup, args.force]):
+        scheduler = DailyScheduler()
+        if not scheduler.should_run_today():
+            schedule = scheduler.get_todays_schedule()
+            if schedule:
+                print(f"⏰ Not scheduled to run now. Today's slot: {schedule['hour']:02d}:{schedule['minute']:02d} UTC")
+            else:
+                print("⏰ No schedule found for today")
+            sys.exit(0)
+        
+        print("🎯 This is the scheduled execution time for today!")
+        # Apply random delay if enabled (but not in test mode for faster testing)
+        if not args.test:
+            apply_random_delay()
+        else:
+            print("⏰ Test mode: skipping random delay")
     
     bot = TweetBot(test_mode=args.test)
     

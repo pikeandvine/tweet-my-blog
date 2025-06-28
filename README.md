@@ -6,11 +6,12 @@ Automatically promote your WordPress blog posts on Twitter using AI-generated tw
 
 - **WordPress Integration**: Parses your `post-sitemap.xml` to discover blog posts
 - **AI-Powered Tweets**: Uses OpenAI GPT-4.1 Mini (April 2025) to generate engaging, human-sounding tweets
+- **Human-Like Scheduling**: Tweets at random times each day (6am-4pm) with optional delays for natural timing
 - **Smart Caching**: SQLite-based system prevents re-tweeting too frequently and avoids redundant content
 - **Style Variations**: Randomizes emoji usage, tone, CTA style, and length for natural variety
 - **Featured Image Support**: Automatically includes featured images from your WordPress posts
-- **Zero Cost**: Runs on GitHub Actions free tier with free-tier API usage
-- **Configurable**: Customizable cooldown periods, tweet frequency, and style parameters
+- **Nearly Zero Cost**: Runs on GitHub Actions free tier with minimal API usage (~$0.01/month)
+- **Highly Configurable**: Customizable schedules, cooldowns, style parameters, and timing behavior
 
 ## 🚀 Quick Start
 
@@ -41,6 +42,7 @@ You'll need:
    SITEMAP_URL=https://yourblog.com/post-sitemap.xml
    BLOG_TITLE=Your Blog Name
    BLOG_DESCRIPTION=Brief description for context
+   ENABLE_DELAY=true
    ```
 
 ### 3. Test Locally (Optional)
@@ -77,8 +79,8 @@ python run.py --stats
 | `BLOG_DESCRIPTION` | *required* | Brief description for tweet context |
 | `COOLDOWN_DAYS` | `30` | Days to wait before re-tweeting a post |
 | `MAX_PREVIOUS_TWEETS` | `3` | Number of previous tweets to avoid duplicating |
-| `TWEET_FREQUENCY` | `daily` | How often to tweet (for reference) |
 | `OPENAI_MODEL` | `gpt-4.1-mini` | OpenAI model to use for tweet generation |
+| `ENABLE_DELAY` | `true` | Enable 0-180 second random delay for human-like timing |
 
 ## 🎨 Style Variations
 
@@ -101,20 +103,89 @@ The bot automatically randomizes these style parameters:
 7. **Posts to Twitter** with optional featured image
 8. **Updates cache** to track what's been tweeted
 
-## 📅 Scheduling
+## 📅 Human-Like Scheduling
 
-The GitHub Actions workflow runs:
-- **Daily at 7 PM UTC / 12 PM PDT** (customize in `.github/workflows/tweet.yaml`)
-- **Manual trigger** via GitHub Actions UI (with optional test mode)
+The bot uses a sophisticated scheduling system to make tweets appear more natural and less bot-like:
+
+### How It Works
+- **11 different execution times** throughout the day (6:12am - 4:29pm PDT)
+- **One random time slot chosen daily** - tweets appear at different times each day
+- **Quick exit strategy** - 10 executions exit immediately, only 1 actually tweets
+- **Optional random delay** of 0-180 seconds for additional human-like variability
+
+### Time Slots (PDT/UTC)
+```
+06:12 AM PDT (13:12 UTC)  |  11:26 AM PDT (18:26 UTC)
+07:23 AM PDT (14:23 UTC)  |  12:43 PM PDT (19:43 UTC) 
+08:08 AM PDT (15:08 UTC)  |  01:17 PM PDT (20:17 UTC)
+09:37 AM PDT (16:37 UTC)  |  02:33 PM PDT (21:33 UTC)
+10:19 AM PDT (17:19 UTC)  |  03:11 PM PDT (22:11 UTC)
+                          |  04:29 PM PDT (23:29 UTC)
+```
+
+### Customizing Time Zone & Window
+
+To adapt for your time zone, modify the cron schedules in `.github/workflows/tweet.yaml`:
+
+```yaml
+schedule:
+  # Example: For EST (UTC-5), subtract 5 hours from UTC times above
+  - cron: "12 08 * * *"  # 8:12 UTC = 3:12am EST
+  - cron: "23 09 * * *"  # 9:23 UTC = 4:23am EST
+  # ... add your preferred times
+```
+
+**Important**: Also update the time slots in `tweet_bot/daily_scheduler.py` to match:
+
+```python
+time_slots = [
+    (8, 12),   # 8:12 UTC (3:12am EST)
+    (9, 23),   # 9:23 UTC (4:23am EST)
+    # ... your custom times
+]
+```
+
+### Random Delay Feature
+
+The `ENABLE_DELAY` variable controls additional timing randomization:
+
+#### When Enabled (`ENABLE_DELAY=true`, default):
+- ✅ **More human-like**: Adds 0-180 seconds of random delay
+- ✅ **Less predictable**: Tweets don't appear at exact scheduled times
+- ⚠️ **Costs more**: Uses additional GitHub Actions minutes (up to 3 extra minutes/day)
+
+#### When Disabled (`ENABLE_DELAY=false`):
+- ✅ **Cost efficient**: Saves ~60-90 GitHub Actions minutes/month
+- ✅ **Predictable timing**: Tweets at exact scheduled times
+- ⚠️ **More bot-like**: Could be detected as automated
+
+#### Set in GitHub Variables:
+```
+ENABLE_DELAY=true   # Enable random delay (recommended)
+ENABLE_DELAY=false  # Disable for cost savings
+```
+
+### Manual Control
+
+You can still trigger tweets manually:
+- **GitHub Actions UI**: Use "Run workflow" with optional test mode
+- **Local testing**: `python run.py --test` (skips scheduling)
+- **Force execution**: `python run.py --force` (bypasses time check)
 
 ## 🛠️ Commands
 
 ```bash
-# Run normally (posts tweets)
+# Run normally (respects scheduling)
 python run.py
 
-# Test mode (generate but don't post)
+# Test mode (generate but don't post, respects scheduling)
 python run.py --test
+
+# Force execution (bypass scheduling check)
+python run.py --force
+
+# Test mode with forced execution
+python run.py --test --force
 
 # View statistics
 python run.py --stats
@@ -164,6 +235,29 @@ Set via `OPENAI_MODEL` environment variable.
 2. **Twitter API errors**: Verify your API keys have Read and Write permissions
 3. **OpenAI API errors**: Check your API key and usage limits
 4. **Cache not persisting**: Ensure the GitHub Actions workflow has write permissions
+5. **Scheduling issues**: See troubleshooting section below
+
+### Scheduling Troubleshooting
+
+**"Not scheduled to run now" messages:**
+- This is normal! Most executions (10/11) will show this message
+- Only 1 execution per day should proceed to tweet
+- Check `daily_schedule.json` in your repo to see today's chosen time
+
+**No tweets being posted:**
+- Verify your cron schedules match your time zone
+- Check if `ENABLE_DELAY` is causing longer delays than expected
+- Use `python run.py --force` to bypass scheduling for testing
+
+**Multiple tweets per day:**
+- This shouldn't happen with proper configuration
+- Check that `daily_schedule.json` is being committed to your repo
+- Verify GitHub Actions has write permissions to commit files
+
+**Wrong time zone:**
+- Update both `.github/workflows/tweet.yaml` cron schedules
+- Update `time_slots` array in `tweet_bot/daily_scheduler.py`
+- Both must match for the system to work correctly
 
 ### Debug Mode
 
@@ -180,9 +274,20 @@ Check the `tweet_generator.log` file for detailed debugging information.
 **Nearly free to run:**
 - **OpenAI API:** ~$0.0002 per tweet with GPT-4.1 Mini (6x cheaper than GPT-4o!)
 - **Twitter API:** Free tier allows plenty of tweets per month
-- **GitHub Actions:** Free tier provides 2,000 minutes/month
+- **GitHub Actions:** 3-4 minutes/day for human-like scheduling (90-120 minutes/month)
 
-**Daily tweeting costs roughly $0.006/month** in OpenAI usage.
+### GitHub Actions Usage Breakdown:
+- **11 executions daily**, but only 1 actually tweets
+- **10 "quick exits"** use ~1 minute total (seconds each)
+- **1 full execution** uses ~2-3 minutes (tweet generation + posting)
+- **Random delay** adds 0-3 minutes when enabled
+- **Monthly total**: ~90-120 minutes (well under 2,000 minute free tier)
+
+### Cost Options:
+- **With delay enabled**: ~120 minutes/month GitHub Actions + $0.006/month OpenAI
+- **With delay disabled**: ~90 minutes/month GitHub Actions + $0.006/month OpenAI
+
+**Total monthly cost: ~$0.01** (essentially free)
 
 ## 📄 License
 
