@@ -185,6 +185,12 @@ class TweetGenerator:
             "- Focus on the content value rather than recency",
             f"- Blog context: {self.config.blog_title} - {self.config.blog_description}",
             "",
+            "CRITICAL WRITING RULES:",
+            "- COMPLETE ALL SENTENCES - never end with incomplete phrases like 'not', 'and', 'or', 'but'",
+            "- Every sentence must be grammatically complete and make sense on its own",
+            "- If approaching character limit, end with a complete sentence rather than an incomplete one",
+            "- Proofread the final tweet to ensure no dangling words or incomplete thoughts",
+            "",
             "FORMATTING RULES:",
             "- Use at least 2 line breaks to improve readability",
             "- Avoid dense blocks of text - break content into digestible sections",
@@ -253,6 +259,28 @@ class TweetGenerator:
         """Clean and validate the generated tweet text"""
         # Remove quotes if the AI wrapped the response in quotes
         tweet_text = tweet_text.strip('"\'')
+        
+        # Check for incomplete sentences that end abruptly
+        # Common patterns that indicate incomplete AI generation
+        incomplete_patterns = [
+            r'\b(not|and|or|but|so|yet|for|nor|with|to|from|in|on|at|by|of)\s*$',  # ends with preposition/conjunction
+            r'\b(smarter|better|faster|more|less|rather|quite|very|really|just)\s*$',  # ends with adverb/modifier
+            r'\b(the|a|an|this|that|these|those|my|your|our|their)\s*$',  # ends with article/determiner
+        ]
+        
+        text_ends_incomplete = any(re.search(pattern, tweet_text.strip(), re.IGNORECASE) for pattern in incomplete_patterns)
+        
+        if text_ends_incomplete:
+            logger.warning("Detected incomplete sentence in AI-generated tweet, attempting to fix...")
+            # Try to complete the sentence by removing the incomplete ending and adding a period
+            for pattern in incomplete_patterns:
+                if re.search(pattern, tweet_text.strip(), re.IGNORECASE):
+                    # Remove the incomplete ending
+                    tweet_text = re.sub(pattern, '', tweet_text.strip(), flags=re.IGNORECASE).strip()
+                    # Add proper punctuation if missing
+                    if not tweet_text.endswith(('.', '!', '?', ':')):
+                        tweet_text += '.'
+                    break
         
         # Ensure URL is included
         if post_url not in tweet_text:
