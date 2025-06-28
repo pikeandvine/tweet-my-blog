@@ -184,6 +184,11 @@ class TweetGenerator:
             "- Focus on the content value rather than recency",
             f"- Blog context: {self.config.blog_title} - {self.config.blog_description}",
             "",
+            "FORMATTING RULES:",
+            "- Use at least 2 line breaks to improve readability",
+            "- Avoid dense blocks of text - break content into digestible sections",
+            "- Format for easy scanning and readability",
+            "",
             "GRAMMAR RULES:",
             "- NO Oxford commas (do not use comma before 'and' in lists)",
             "- NO em dashes (—) - use regular hyphens (-) or avoid dashes entirely"

@@ -91,6 +91,7 @@ The bot automatically randomizes these style parameters:
 - **CTA Style**: Direct, question-based, intriguing, or benefit-focused
 - **Length**: Concise (180 chars), medium (220 chars), or full (280 chars)
 - **Hashtags**: Random inclusion of relevant hashtags
+- **Formatting**: Improved readability with line breaks to avoid dense text blocks
 
 ## 🤖 How It Works
 
@@ -300,6 +301,16 @@ Contributions welcome! Feel free to:
 - Suggest features  
 - Submit pull requests
 - Share your customizations
+
+## 📝 Recent Updates
+
+**June 2025:**
+- **Better Tweet Formatting** - Added automatic line breaks for improved readability and less dense tweets
+
+**Previous Features:**
+- **Human-like Scheduling** - Multiple daily time slots with random selection  
+- **Enhanced Style Variations** - More natural variety in emoji usage, tone, and CTAs
+- **Smart Caching** - Prevents re-tweeting too frequently and avoids redundant content
 
 ---
 
