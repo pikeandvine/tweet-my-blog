@@ -20,24 +20,33 @@ class DailyScheduler:
         Returns True if it's this run's turn, False if another time slot was chosen.
         """
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        current_hour = datetime.now(timezone.utc).hour
-        current_minute = datetime.now(timezone.utc).minute
+        current_time = datetime.now(timezone.utc)
         
         # Load or create today's schedule
         schedule = self._get_or_create_schedule(today)
         
-        # Check if current time matches the scheduled time (within 1 minute)
+        # Check if current time matches the scheduled time
         scheduled_hour = schedule.get("hour")
         scheduled_minute = schedule.get("minute")
         
         if scheduled_hour is None or scheduled_minute is None:
             return False
             
-        # Allow execution if we're within 1 minute of the scheduled time
-        time_match = (current_hour == scheduled_hour and 
-                     abs(current_minute - scheduled_minute) <= 1)
+        # Create scheduled datetime for today
+        scheduled_time = current_time.replace(
+            hour=scheduled_hour, 
+            minute=scheduled_minute, 
+            second=0, 
+            microsecond=0
+        )
         
-        return time_match
+        # Calculate time difference in minutes
+        time_diff_seconds = abs((current_time - scheduled_time).total_seconds())
+        time_diff_minutes = time_diff_seconds / 60
+        
+        # Allow execution if we're within 10 minutes of the scheduled time
+        # This accounts for GitHub Actions delays and ensures we don't miss the window
+        return time_diff_minutes <= 10
     
     def _get_or_create_schedule(self, today: str) -> Dict[str, Any]:
         """Get existing schedule or create a new one for today"""
